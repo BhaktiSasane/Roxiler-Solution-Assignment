@@ -1,0 +1,29 @@
+from flask import request
+
+@app.route('/api/transactions', methods=['GET'])
+def list_transactions():
+    month = request.args.get('month', default='March')
+    search_text = request.args.get('search', default='', type=str)
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=10, type=int)
+
+    # Convert month name to number
+    month_num = datetime.datetime.strptime(month, '%B').month
+
+    # Query for transactions
+    query = Transaction.query.filter(Transaction.dateOfSale.contains(str(month_num)))
+
+    if search_text:
+        query = query.filter(
+            (Transaction.title.ilike(f'%{search_text}%')) |
+            (Transaction.description.ilike(f'%{search_text}%')) |
+            (Transaction.price.ilike(f'%{search_text}%'))
+        )
+    
+    transactions = query.paginate(page=page, per_page=per_page)
+    return jsonify({
+        "transactions": [t.serialize() for t in transactions.items],
+        "total": transactions.total,
+        "page": transactions.page,
+        "per_page": transactions.per_page
+    })

@@ -1,0 +1,36 @@
+from flask import Flask, jsonify
+import requests
+import json
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///transactions.db'
+db = SQLAlchemy(app)
+
+class Transaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100))
+    description = db.Column(db.String(200))
+    price = db.Column(db.Float)
+    dateOfSale = db.Column(db.String(10))
+    category = db.Column(db.String(50))
+
+@app.route('/api/init-database', methods=['POST'])
+def init_database():
+    response = requests.get("https://s3.amazonaws.com/roxiler.com/product_transaction.json")
+    data = response.json()
+    
+    db.create_all()
+    
+    for item in data:
+        transaction = Transaction(
+            title=item['title'],
+            description=item['description'],
+            price=item['price'],
+            dateOfSale=item['dateOfSale'],
+            category=item['category']
+        )
+        db.session.add(transaction)
+    db.session.commit()
+    
+    return jsonify({"message": "Database initialized with seed data."}), 201

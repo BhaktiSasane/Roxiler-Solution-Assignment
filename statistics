@@ -1,0 +1,14 @@
+@app.route('/api/statistics', methods=['GET'])
+def statistics():
+    month = request.args.get('month', default='March')
+    month_num = datetime.datetime.strptime(month, '%B').month
+    
+    total_sales = db.session.query(db.func.sum(Transaction.price)).filter(Transaction.dateOfSale.contains(str(month_num))).scalar() or 0
+    total_sold_items = db.session.query(db.func.count(Transaction.id)).filter(Transaction.dateOfSale.contains(str(month_num))).scalar() or 0
+    total_not_sold_items = db.session.query(db.func.count(Transaction.id)).filter(Transaction.price == 0, Transaction.dateOfSale.contains(str(month_num))).scalar() or 0
+    
+    return jsonify({
+        "total_sales": total_sales,
+        "total_sold_items": total_sold_items,
+        "total_not_sold_items": total_not_sold_items
+    })

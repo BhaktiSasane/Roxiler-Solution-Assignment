@@ -1,0 +1,13 @@
+@app.route('/api/combined-data', methods=['GET'])
+def combined_data():
+    month = request.args.get('month', default='March')
+    
+    statistics = requests.get(f'/api/statistics?month={month}').json()
+    bar_chart_data = requests.get(f'/api/bar-chart?month={month}').json()
+    pie_chart_data = requests.get(f'/api/pie-chart?month={month}').json()
+    
+    return jsonify({
+        "statistics": statistics,
+        "bar_chart": bar_chart_data,
+        "pie_chart": pie_chart_data
+    })

@@ -1,0 +1,9 @@
+@app.route('/api/pie-chart', methods=['GET'])
+def pie_chart():
+    month = request.args.get('month', default='March')
+    month_num = datetime.datetime.strptime(month, '%B').month
+    
+    categories = db.session.query(Transaction.category, db.func.count(Transaction.id)).filter(Transaction.dateOfSale.contains(str(month_num))).group_by(Transaction.category).all()
+    
+    result = {category: count for category, count in categories}
+    return jsonify(result)
